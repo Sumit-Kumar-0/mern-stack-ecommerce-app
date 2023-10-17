@@ -1,6 +1,10 @@
 1. git commands ==> git init --then--> git remote add origin <SSH link> --then--> git add . --then--> git commit -m "write a related message" --then--> git push origin master.
 
+
+
 2. npm init --then--> npm i express colors nodemon
+
+
 
 3. start server >>>
 const express = require('express');
@@ -16,12 +20,16 @@ app.listen(PORT, () => {
     console.log(`server is running on port ${PORT}`.bgBlack.white);
 });
 
+
+
 4. for using import as like react and avoiding require so we can use >>> "type": "module" in package.json (it is es6 module and require is es5)
   "name": "ecommarce-app",
   "version": "1.0.1",
   "description": "ecommarce res api",
   "main": "server.js",
   "type": "module",  <<-----(here it is)
+
+
 
 5. now install dotenv and make your all confidential variable here --> eg. port, your api key, payment api etc.
 
@@ -31,6 +39,225 @@ now install and config dotenv and extract data from it
     dotenv.config() -->> if .env in root folder so use 
     const port = process.env.PORT -->> here we are extracting variable name with PORT this is the way of extracting from .env file
 
+
+
 6. now create database on mongoDB -->> DBs name and then make collections
 
+
+
 7. now instal mongoose and morgan -->> npm i mongoose morgan
+
+
+
+8. now connect database --->> db.js file
+
+import mongoose from "mongoose";
+import colors from "colors";
+
+const connectDB = async () => {
+    try{
+        const conn = await mongoose.connect(process.env.MONGO_URL);
+        console.log(`connected to mongoDB database ${conn.connection.host}`);
+    } catch(error){
+        console.log(`error in mongoDB ${error}`.bgRed.white);
+    }
+};
+
+export default connectDB;
+
+
+
+9. now app.js m morgan and connectDB ko import kro and dono ko config kro and middleware m express.json bhi pass kro
+import morgan from "morgan";
+import connectDB from "./config/db";
+
+const app = express();
+
+// configure env
+dotenv.config();
+
+// config DB 
+connectDB();
+
+// middlewares 
+app.use(express.json());
+app.use(morgan("dev"));
+
+
+
+10. now create multiple folder for diffrent work according to MVC. -->> eg. models, middlewares, controllers etc.
+
+
+
+11. now create file in models folder with name userModel.js which will handle users.
+now make userSchema and export it
+import mongoose from "mongoose";
+
+const userSchema = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        email: {
+            type: String,
+            required: true,
+            unique: true
+        },
+        password: {
+            type: String,
+            required: true
+        },
+        phone: {
+            type : String,
+            required: true
+        },
+        address: {
+            type: String,
+            required: true
+        },
+        role: {
+            type: Number,
+            default: 0
+        }
+    }, {timestamps: true});
+
+    export default mongoose.model("users", userSchema);
+
+in this code we use unique key which means you can use 1 email for 1 time only,
+we use timestamp : true that means ki when new user created so uska created time waha per add ho jayega.
+
+
+
+12. now we will create a file in routes folder with the name authRoute.js and now hum express import krake express se router object ek constant m le lenge then routing krenge by using post method, yaha humne registerController callback function use kia h inko controllers m bnayenge
+
+import { Express } from "express";
+
+// router object 
+const router = express.Router();
+
+// routing
+// register || method post 
+
+router.post('/register', registerController);
+
+export default router;
+
+
+
+13. now create authController.js in controllers folder here create function -->> export const registerController = () => {} and now import authRoute in server.js file and config it.
+
+import authRoute from "./routes/authRoute.js"
+
+const app = express();
+
+// configure env
+dotenv.config();
+
+// config DB 
+connectDB();
+
+// middlewares 
+app.use(express.json());
+app.use(morgan("dev"));
+
+// routes 
+app.use("api/v1/auth", authRoute);
+
+
+
+14. now this is the post request what we created just before so we can not see post request on browser without frontend so that we can use postman tool as a client and test our requests!
+
+
+
+15. now intall bcrypt -->> npm i bcrypt (it will help to hash our password so that no one can see the password because it will convert it into hash value -->> eg. password = 123456sumit   and hash value of this password is sfnrhlgtuinteumferam34jrenfbeny43ybefdngl)
+
+
+
+16. now create a file in helpers with the name authHelpers and npw make 2 function first make the password hash and 2nd function will compare hashedPassword and password using bcrypt.
+
+import bcrypt from 'bcrypt';
+
+export const hashPassword = async (password) => {
+    try{
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        return hashedPassword;
+    }catch(error){
+        console.log(error)
+    }
+};
+
+export const comparePassword = (password, hashedPassword) => {
+    return bcrypt.compare(password, hashedPassword);
+};
+
+
+
+17. now work on registerController function which is existing in controllers/authController.js file. here we will validate it first we take values from user so, phle value k base per validation if any field is empty so return error , then validation on the basis of if email is already exist in database return error then register it by taking password by hash method and save it by save method and give status 201 and message : successfully registered -->> this everything will happen in try block now write catch block if any issue so give error!
+
+import useModel from "../models/useModel.js";
+import { hashPassword } from "../helpers/authHelper.js";
+
+export const registerController = async (req, res) => {
+    try{
+        const {name, email, password, phone, address} = req.body;
+
+        // validations 
+        if(!name){
+            return res.send({error :"name is required"})
+        };
+        if(!email){
+            return res.send({error :"email is required"})
+        };
+        if(!password){
+            return res.send({error :"password is required"})
+        };
+        if(!phone){
+            return res.send({error :"phone is required"})
+        };
+        if(!address){
+            return res.send({error :"address is required"})
+        };
+
+        // check if user is already registerd by this email 
+        const existingUser = await useModel.findOne({email})  // we are using email instead of email:email because both work same
+
+        // existing user 
+        if(existingUser){
+            res.status(200).send({
+                success: true,
+                message: "already register please login"
+            });
+        };
+
+        // register user 
+        const hashedPassword = await hashPassword(password);
+        // save 
+        const user = new useModel({name, email, phone, address, password: hashedPassword}).save();
+        res.status(201).send({
+            success: true,
+            message: "user registered successfully",
+            user
+        });
+    }catch(error){
+        console.log(error);
+        res.status(500).send({
+            success: false,
+            message: "error in registration",
+            error
+        });
+    };
+};
+
+now test on postman 
+
+
+
+18. now install jsonwebtoken (JWT) 
+
+
+
+19. now go to the routes/authRoute.js and add route for login -->> router.post("/login", loginController);
+here we have given a callback function into the route withe the name loginController so now go to the controllers/authController.js file and create one more function in this file with the name loginController and then check validation email and password are right or not if right then login otherwise check by email if not exist then return error!
