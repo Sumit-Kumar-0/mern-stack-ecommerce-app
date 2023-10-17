@@ -1,1 +1,36 @@
-hia
+1. git commands ==> git init --then--> git remote add origin <SSH link> --then--> git add . --then--> git commit -m "write a related message" --then--> git push origin master.
+
+2. npm init --then--> npm i express colors nodemon
+
+3. start server >>>
+const express = require('express');
+const colors = require('colors');
+const app = express();
+
+app.get("/", (req, res) => {
+    res.send("<h1>server is start</h1>")
+});
+
+const PORT = 8080;
+app.listen(PORT, () => {
+    console.log(`server is running on port ${PORT}`.bgBlack.white);
+});
+
+4. for using import as like react and avoiding require so we can use >>> "type": "module" in package.json (it is es6 module and require is es5)
+  "name": "ecommarce-app",
+  "version": "1.0.1",
+  "description": "ecommarce res api",
+  "main": "server.js",
+  "type": "module",  <<-----(here it is)
+
+5. now install dotenv and make your all confidential variable here --> eg. port, your api key, payment api etc.
+
+now install and config dotenv and extract data from it
+    npm i dotenv
+    dotenv.config({path: './folder/file'}) -->> if .env is not in root folder so use this and tell the path 
+    dotenv.config() -->> if .env in root folder so use 
+    const port = process.env.PORT -->> here we are extracting variable name with PORT this is the way of extracting from .env file
+
+6. now create database on mongoDB -->> DBs name and then make collections
+
+7. now instal mongoose and morgan -->> npm i mongoose morgan
