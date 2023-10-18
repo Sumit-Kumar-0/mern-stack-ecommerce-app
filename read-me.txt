@@ -257,7 +257,79 @@ now test on postman
 
 18. now install jsonwebtoken (JWT) 
 
+The JWT.sign function takes in three main parameters:
+
+Payload: This is an object containing the data that you want to include in the token. In the provided code, it includes the user's _id.
+
+Secret: This is a string used to sign the token, ensuring its integrity. It is important to keep this secret key safe and not expose it directly in the code for security reasons. In the code, it fetches the secret key from the environment variables using process.env.JWT_SECRET.
+
+Options: This is an optional parameter that allows you to specify additional options for the token, such as the token's expiration time. In this case, the token is set to expire in 7 days.
+
+After the token is generated, it is stored in the LOGIN_TOKEN variable and will be sent as part of the response to the user upon successful login. The token can be used for authentication and authorization purposes for subsequent requests, allowing the server to verify the identity of the user.
+
 
 
 19. now go to the routes/authRoute.js and add route for login -->> router.post("/login", loginController);
 here we have given a callback function into the route withe the name loginController so now go to the controllers/authController.js file and create one more function in this file with the name loginController and then check validation email and password are right or not if right then login otherwise check by email if not exist then return error!
+
+here we make login token which will use for special route like user login just so token will generate and every time it will be unique and diffrent from last time logins now we will use it in the url so that login route always be unique and change every time login.
+
+// login
+
+export const loginController = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    // validation
+    if (!email || !password) {
+      return res.status(404).send({
+        success: false,
+        messege: "invalid email or password",
+      });
+    }
+
+    // check user
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(200).send({
+        success: false,
+        messege: "email not registered",
+      });
+    }
+
+    const matchPassword = await comparePassword(password, user.password);
+    if (!matchPassword) {
+      return res.status(200).send({
+        success: false,
+        messege: "invalid password",
+      });
+    }
+
+    const LOGIN_TOKEN = await JWT.sign(
+      { _id: user._id },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    res.status(200).send({
+      success: true,
+      messege: "login successfully",
+      user: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+      },
+      LOGIN_TOKEN,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      messege: "error in login",
+      error,
+    });
+  }
+};
+
+
