@@ -45,7 +45,8 @@ now install and config dotenv and extract data from it
 
 
 
-7. now instal mongoose and morgan -->> npm i mongoose morgan
+7. now instal mongoose and morgan -->> npm i mongoose morgan -->> here morgan will tell us ki consa url hit ua h -- 
+eg. POST /api/v1/auth/login 200 115.584 ms - 312       (mene yaha pe login kia to isne mujhe consol m ye send kia lia first post h jo method h isne btaya fir /api/v1/auth/login  ye url h login ka ye isne btaya fir 200 h ye h status code then 115.584 ms - 312 ye lime h pura ki 115.584 ms and 312 k beech m ye output aaya)
 
 
 
